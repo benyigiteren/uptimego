@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  uptimego:
+    build: .
+    container_name: uptimego
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - TZ=Europe/Istanbul # Set default timezone
+    # Add capabilities for OS ICMP ping
+    cap_add:
+      - NET_RAW

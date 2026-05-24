@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="{{ .Lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }}</title>
+    <!-- Google Fonts Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #030307;
+            font-family: 'Outfit', sans-serif;
+            overflow-x: hidden;
+        }
+        .custom-transition {
+            transition: all 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+        .double-bezel-outer {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+            padding: 1px;
+            border-radius: 20px;
+        }
+        .double-bezel-inner {
+            background: rgba(13, 14, 21, 0.85);
+            backdrop-filter: blur(24px);
+            border-radius: 19px;
+        }
+        .glow-green {
+            box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+        }
+        .glow-red {
+            box-shadow: 0 0 16px rgba(239, 68, 68, 0.3);
+        }
+        .glow-yellow {
+            box-shadow: 0 0 16px rgba(245, 158, 11, 0.3);
+        }
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-100 font-sans flex flex-col justify-between relative">
+
+    <!-- Glowing mesh background orbs -->
+    <div class="fixed inset-0 -z-50 overflow-hidden pointer-events-none">
+        <div class="absolute -top-48 -left-48 w-96 h-96 rounded-full bg-blue-600/10 blur-[128px]"></div>
+        <div class="absolute top-1/3 -right-48 w-96 h-96 rounded-full bg-indigo-600/10 blur-[128px]"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="w-full max-w-4xl mx-auto px-6 py-6 flex justify-between items-center z-10">
+        <div class="flex items-center space-x-3">
+            {{ if .Settings.PublicLogo }}
+            <img src="{{ .Settings.PublicLogo }}" alt="Logo" class="h-8 max-w-[120px] object-contain">
+            {{ end }}
+            <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-slate-100 via-slate-200 to-slate-400 bg-clip-text text-transparent">{{ .Settings.PublicTitle }}</span>
+        </div>
+        
+        <div class="flex items-center bg-slate-950/80 border border-slate-900 rounded-xl p-0.5 backdrop-blur-sm">
+            <a href="/lang?lang=tr" class="px-3 py-1.5 rounded-lg text-xs font-semibold custom-transition {{ if eq .Lang "tr" }}bg-blue-600/20 text-blue-400 border border-blue-500/20{{ else }}text-slate-500 hover:text-slate-300{{ end }}">TR</a>
+            <a href="/lang?lang=en" class="px-3 py-1.5 rounded-lg text-xs font-semibold custom-transition {{ if eq .Lang "en" }}bg-blue-600/20 text-blue-400 border border-blue-500/20{{ else }}text-slate-500 hover:text-slate-300{{ end }}">EN</a>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow w-full max-w-4xl mx-auto px-6 py-4 z-10">
+
+        <!-- Overall Status Banner -->
+        <div class="double-bezel-outer shadow-lg mb-6">
+            <div class="double-bezel-inner p-6 flex items-center space-x-4
+                {{ if eq .Data.Summary "all_operational" }}border border-emerald-500/10 bg-emerald-950/5{{ else if eq .Data.Summary "some_issues" }}border border-yellow-500/10 bg-yellow-950/5{{ else }}border border-rose-500/10 bg-rose-950/5{{ end }}">
+                
+                <div>
+                    {{ if eq .Data.Summary "all_operational" }}
+                    <div class="h-3.5 w-3.5 rounded-full bg-emerald-500 glow-green animate-pulse"></div>
+                    {{ else if eq .Data.Summary "some_issues" }}
+                    <div class="h-3.5 w-3.5 rounded-full bg-yellow-500 glow-yellow animate-pulse"></div>
+                    {{ else }}
+                    <div class="h-3.5 w-3.5 rounded-full bg-rose-500 glow-red animate-pulse"></div>
+                    {{ end }}
+                </div>
+                
+                <div>
+                    <h2 class="text-base font-bold tracking-tight">
+                        {{ if eq .Data.Summary "all_operational" }}
+                            {{ T .Lang "status.all_operational" }}
+                        {{ else if eq .Data.Summary "some_issues" }}
+                            {{ T .Lang "status.some_issues" }}
+                        {{ else }}
+                            {{ T .Lang "status.all_down" }}
+                        {{ end }}
+                    </h2>
+                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1">
+                        {{ T .Lang "status.last_checked" }}: <span class="font-mono text-slate-400">{{ timeNowStr }}</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Announcement Block -->
+        {{ if .Settings.PublicAnnouncement }}
+        <div class="double-bezel-outer shadow-lg mb-6">
+            <div class="double-bezel-inner border border-blue-500/10 bg-blue-950/5 p-6">
+                <h3 class="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.notice" }}</h3>
+                <p class="text-sm text-slate-300 leading-relaxed">{{ .Settings.PublicAnnouncement }}</p>
+            </div>
+        </div>
+        {{ end }}
+
+        <!-- Monitors Status List -->
+        <div class="double-bezel-outer shadow-2xl">
+            <div class="double-bezel-inner overflow-hidden">
+                <div class="divide-y divide-slate-900/60">
+                    {{ range .Data.Monitors }}
+                    <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        
+                        <!-- Left: Name & Status -->
+                        <div class="flex items-center space-x-4">
+                            {{ if eq .Status "up" }}
+                            <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 glow-green shrink-0"></span>
+                            {{ else if eq .Status "down" }}
+                            <span class="h-2.5 w-2.5 rounded-full bg-rose-500 glow-red shrink-0"></span>
+                            {{ else }}
+                            <span class="h-2.5 w-2.5 rounded-full bg-yellow-500 shrink-0"></span>
+                            {{ end }}
+
+                            <div>
+                                <h4 class="font-bold text-slate-200 text-base tracking-tight">{{ .Name }}</h4>
+                                <p class="text-xs text-slate-500 mt-1 font-mono truncate max-w-xs sm:max-w-md">{{ .Target }}</p>
+                                <!-- Recent checks grid timeline -->
+                                <div class="flex items-center space-x-1 mt-3">
+                                    {{ range .RecentLogs }}
+                                        {{ if eq . "up" }}
+                                        <span class="h-3.5 w-1 rounded-sm bg-emerald-500/80 hover:bg-emerald-400 hover:scale-y-125 transition-all duration-100 cursor-help" title="UP"></span>
+                                        {{ else }}
+                                        <span class="h-3.5 w-1 rounded-sm bg-rose-500/80 hover:bg-rose-400 hover:scale-y-125 transition-all duration-100 cursor-help" title="DOWN"></span>
+                                        {{ end }}
+                                    {{ else }}
+                                        <span class="text-[9px] text-slate-600 font-semibold uppercase tracking-wider">No checks yet</span>
+                                    {{ end }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Stats -->
+                        <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs md:text-sm">
+                            <!-- Uptime ranges -->
+                            <div class="flex flex-col">
+                                <span class="text-[9px] text-slate-500 uppercase tracking-widest font-bold">{{ T $.Lang "dashboard.uptime_summary" }}</span>
+                                <span class="font-mono mt-1 text-slate-300 tabular-nums">
+                                    <span class="{{ if ge .Uptime24h 99.0 }}text-emerald-400{{ else if ge .Uptime24h 95.0 }}text-yellow-400{{ else }}text-rose-400{{ end }}">{{ printf "%.2f" .Uptime24h }}%</span>
+                                    <span class="text-slate-700">/</span>
+                                    <span class="text-slate-400">{{ printf "%.2f" .Uptime7d }}%</span>
+                                    <span class="text-slate-700">/</span>
+                                    <span class="text-slate-500">{{ printf "%.2f" .Uptime30d }}%</span>
+                                </span>
+                            </div>
+
+                            <!-- Latency -->
+                            <div class="flex flex-col">
+                                <span class="text-[9px] text-slate-500 uppercase tracking-widest font-bold">{{ T $.Lang "status.latency" }}</span>
+                                <span class="font-mono mt-1 text-slate-300 tabular-nums">{{ .LastResponseTime }} ms</span>
+                            </div>
+
+                            <!-- Status text -->
+                            <div class="flex flex-col text-right">
+                                <span class="text-[9px] text-slate-500 uppercase tracking-widest font-bold">{{ T $.Lang "common.status" }}</span>
+                                {{ if eq .Status "up" }}
+                                <span class="text-emerald-400 font-bold uppercase tracking-wider text-[10px] mt-1">{{ T $.Lang "status.operational" }}</span>
+                                {{ else if eq .Status "down" }}
+                                <span class="text-rose-400 font-bold uppercase tracking-wider text-[10px] mt-1">{{ T $.Lang "status.down" }}</span>
+                                {{ else }}
+                                <span class="text-slate-500 font-bold uppercase tracking-wider text-[10px] mt-1">{{ T $.Lang "common.unknown" }}</span>
+                                {{ end }}
+                            </div>
+                        </div>
+
+                    </div>
+                    {{ else }}
+                    <div class="py-16 text-center text-slate-500 font-semibold text-sm">
+                        {{ T .Lang "status.no_monitors" }}
+                    </div>
+                    {{ end }}
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full text-center py-8 text-[11px] text-slate-600 border-t border-slate-950 bg-slate-950/20 mt-12 z-10">
+        Powered by <a href="https://github.com/benyigiteren/uptimego" target="_blank" class="hover:text-slate-400 font-semibold text-slate-500 border-b border-dashed border-slate-700 hover:border-slate-400 transition-colors">UptimeGO</a>
+    </footer>
+
+</body>
+</html>

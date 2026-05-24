@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="{{ .Lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }}</title>
+    <!-- Google Fonts Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- Alpine.js CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        body {
+            background-color: #030307;
+            font-family: 'Outfit', sans-serif;
+            overflow-x: hidden;
+        }
+        .custom-transition {
+            transition: all 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+        .double-bezel-outer {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+            padding: 1px;
+            border-radius: 24px;
+        }
+        .double-bezel-inner {
+            background: rgba(13, 14, 21, 0.85);
+            backdrop-filter: blur(24px);
+            border-radius: 23px;
+        }
+        .input-bezel {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+            padding: 1px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        .input-bezel:focus-within {
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.4) 0%, rgba(99, 102, 241, 0.1) 100%);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-slate-100 relative">
+
+    <!-- Glowing mesh background orbs -->
+    <div class="fixed inset-0 -z-50 overflow-hidden pointer-events-none">
+        <div class="absolute -top-48 -left-48 w-96 h-96 rounded-full bg-blue-600/10 blur-[128px]"></div>
+        <div class="absolute top-1/2 -right-48 w-96 h-96 rounded-full bg-indigo-600/10 blur-[128px]"></div>
+    </div>
+
+    <!-- Header / Lang switcher -->
+    <header class="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center z-10">
+        <div class="flex items-center space-x-2">
+            <span class="text-2xl font-bold tracking-tight bg-gradient-to-r from-blue-400 via-indigo-400 to-indigo-500 bg-clip-text text-transparent">UptimeGo</span>
+        </div>
+        <div class="flex items-center bg-slate-950/80 border border-slate-900 rounded-xl p-0.5 backdrop-blur-sm">
+            <a href="/lang?lang=tr" class="px-3 py-1.5 rounded-lg text-xs font-semibold custom-transition {{ if eq .Lang "tr" }}bg-blue-600/20 text-blue-400 border border-blue-500/20{{ else }}text-slate-500 hover:text-slate-300{{ end }}">TR</a>
+            <a href="/lang?lang=en" class="px-3 py-1.5 rounded-lg text-xs font-semibold custom-transition {{ if eq .Lang "en" }}bg-blue-600/20 text-blue-400 border border-blue-500/20{{ else }}text-slate-500 hover:text-slate-300{{ end }}">EN</a>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow flex items-center justify-center p-6 z-10">
+        <div x-data="loginForm()" class="w-full max-w-md double-bezel-outer shadow-2xl">
+            <div class="double-bezel-inner p-8 md:p-10">
+                <h1 class="text-3xl font-bold mb-8 tracking-tight text-center bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent">
+                    {{ T .Lang "login.title" }}
+                </h1>
+
+                <div x-show="errorMessage" style="display: none;" class="mb-6 p-4 bg-rose-950/40 border border-rose-500/20 text-rose-300 text-xs rounded-xl leading-relaxed custom-transition" x-text="errorMessage"></div>
+
+                <form @submit.prevent="submitLogin" class="space-y-6">
+                    <!-- Username -->
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                            {{ T .Lang "login.username" }}
+                        </label>
+                        <div class="input-bezel">
+                            <input type="text" x-model="username" required
+                                   class="w-full bg-[#07080D] rounded-[11px] px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none transition-colors">
+                        </div>
+                    </div>
+
+                    <!-- Password -->
+                    <div x-data="{ showPassword: false }">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                            {{ T .Lang "login.password" }}
+                        </label>
+                        <div class="input-bezel relative">
+                            <input :type="showPassword ? 'text' : 'password'" x-model="password" required
+                                   class="w-full bg-[#07080D] rounded-[11px] pl-4 pr-12 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none transition-colors">
+                            <button type="button" @click="showPassword = !showPassword" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300 transition-colors">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!showPassword">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="showPassword" style="display: none;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" :disabled="loading"
+                            class="w-full relative group bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-blue-500/20 active:scale-[0.98] custom-transition disabled:opacity-50 disabled:pointer-events-none flex justify-center items-center">
+                        <span x-show="!loading">{{ T .Lang "login.submit" }}</span>
+                        <span x-show="loading" class="flex items-center space-x-2">
+                            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="text-xs uppercase tracking-wider">{{ T .Lang "common.loading" }}</span>
+                        </span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full text-center py-8 text-[11px] text-slate-600 border-t border-slate-950 bg-slate-950/20">
+        Powered by <a href="https://github.com/benyigiteren/uptimego" target="_blank" class="hover:text-slate-400 font-semibold text-slate-500 border-b border-dashed border-slate-700 hover:border-slate-400 transition-colors">UptimeGO</a>
+    </footer>
+
+    <script>
+        function loginForm() {
+            return {
+                username: '',
+                password: '',
+                loading: false,
+                errorMessage: '',
+                async submitLogin() {
+                    this.loading = true;
+                    this.errorMessage = '';
+
+                    try {
+                        const response = await fetch('/api/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                username: this.username,
+                                password: this.password
+                            })
+                        });
+
+                        let result = {};
+                        const contentType = response.headers.get("content-type");
+                        if (contentType && contentType.includes("application/json")) {
+                            result = await response.json();
+                        } else {
+                            const text = await response.text();
+                            result = { error: text || 'Login failed' };
+                        }
+
+                        if (!response.ok) {
+                            throw new Error(result.error || 'Login failed');
+                        }
+
+                        window.location.href = '/';
+
+                    } catch (error) {
+                        this.errorMessage = error.message;
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

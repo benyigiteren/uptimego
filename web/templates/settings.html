@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="{{ .Lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ T .Lang "settings.title" }} - UptimeGo</title>
+    <!-- Google Fonts Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- Alpine.js CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        body {
+            background-color: #030307;
+            font-family: 'Outfit', sans-serif;
+            overflow-x: hidden;
+        }
+        .custom-transition {
+            transition: all 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+        .double-bezel-outer {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+            padding: 1px;
+            border-radius: 20px;
+        }
+        .double-bezel-inner {
+            background: rgba(13, 14, 21, 0.85);
+            backdrop-filter: blur(24px);
+            border-radius: 19px;
+        }
+        .input-bezel {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+            padding: 1px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        .input-bezel:focus-within {
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.4) 0%, rgba(99, 102, 241, 0.1) 100%);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-100 font-sans" x-data="settingsState()">
+
+    <!-- Glowing mesh background orbs -->
+    <div class="fixed inset-0 -z-50 overflow-hidden pointer-events-none">
+        <div class="absolute -top-48 -left-48 w-96 h-96 rounded-full bg-blue-600/10 blur-[128px]"></div>
+        <div class="absolute top-1/2 -right-48 w-96 h-96 rounded-full bg-indigo-600/10 blur-[128px]"></div>
+        <div class="absolute -bottom-48 left-1/3 w-96 h-96 rounded-full bg-purple-600/10 blur-[128px]"></div>
+    </div>
+
+    <!-- Wrapper -->
+    <div class="flex flex-col md:flex-row min-h-screen">
+
+        <!-- Mobile Header / Top Bar -->
+        <header class="md:hidden flex items-center justify-between px-4 h-14 border-b border-slate-800/60 bg-[#07080D]/90 backdrop-blur-xl sticky top-0 z-30 w-full">
+            <button @click="mobileMenuOpen = !mobileMenuOpen" class="p-2 -ml-1 text-slate-400 hover:text-slate-100 active:scale-95 transition-all duration-200 focus:outline-none">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!mobileMenuOpen">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="mobileMenuOpen" style="display: none;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            <span></span>
+        </header>
+
+        <!-- Sidebar Navigation Drawer (Mobile Mode overlay) -->
+        <div class="md:hidden fixed inset-0 z-40 flex pointer-events-none" :class="mobileMenuOpen ? 'pointer-events-auto' : ''">
+            <!-- Overlay background -->
+            <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm pointer-events-auto"
+                 x-show="mobileMenuOpen"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 @click="mobileMenuOpen = false"
+                 style="display: none;"></div>
+            
+            <!-- Drawer Menu content -->
+            <nav class="relative flex flex-col w-72 max-w-xs h-full bg-[#07080D]/95 border-r border-slate-900 p-6 z-50 text-slate-200 backdrop-blur-md pointer-events-auto"
+                 x-show="mobileMenuOpen"
+                 x-transition:enter="transition ease-out duration-300 transform"
+                 x-transition:enter-start="-translate-x-full"
+                 x-transition:enter-end="translate-x-0"
+                 x-transition:leave="transition ease-in duration-250 transform"
+                 x-transition:leave-start="translate-x-0"
+                 x-transition:leave-end="-translate-x-full"
+                 style="display: none;">
+                <div class="mb-8">
+                    <span class="text-2xl font-bold tracking-tight bg-gradient-to-r from-blue-400 via-indigo-400 to-indigo-500 bg-clip-text text-transparent">UptimeGo</span>
+                </div>
+                
+                <!-- Links -->
+                <div class="flex-grow space-y-2 overflow-y-auto pr-1">
+                    <a href="/" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-900/50 border border-transparent hover:border-slate-800/30 transition text-sm font-medium">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"/></svg>
+                        <span>{{ T .Lang "dashboard.title" }}</span>
+                    </a>
+
+                    <div class="pt-4 pb-1 px-3">
+                        <span class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">{{ T .Lang "settings.title" }}</span>
+                    </div>
+
+                    <a href="#notifications" @click="mobileMenuOpen = false"
+                            :class="activeTab === 'notifications' ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' : 'text-slate-400 hover:text-slate-200 border border-transparent hover:bg-slate-900/40'"
+                            class="w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 text-left">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                        <span>{{ T .Lang "settings.tab.notifications" }}</span>
+                    </a>
+
+                    <a href="#general" @click="mobileMenuOpen = false"
+                            :class="activeTab === 'general' ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' : 'text-slate-400 hover:text-slate-200 border border-transparent hover:bg-slate-900/40'"
+                            class="w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 text-left">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        <span>{{ T .Lang "settings.tab.general" }}</span>
+                    </a>
+
+                    <a href="#api" @click="mobileMenuOpen = false"
+                            :class="activeTab === 'api' ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' : 'text-slate-400 hover:text-slate-200 border border-transparent hover:bg-slate-900/40'"
+                            class="w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 text-left">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 7a2 2 0 012 2m-2 4a2 2 0 012-2m-2 4a2 2 0 012 2m-2-4h.01M19 3h-1a1 1 0 00-1 1v1a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 00-1-1H4a2 2 0 00-2 2v14a2 2 0 002 2h16a2 2 0 002-2V5a2 2 0 00-2-2z"/></svg>
+                        <span>{{ T .Lang "settings.tab.api" }}</span>
+                    </a>
+
+                    <div class="pt-4 pb-1 px-3">
+                        <span class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">{{ T .Lang "dashboard.public_page" }}</span>
+                    </div>
+
+                    <a href="/status" target="_blank" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-900/50 border border-transparent hover:border-slate-800/30 transition text-sm font-medium">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>{{ T .Lang "dashboard.public_page" }}</span>
+                    </a>
+                </div>
+
+                <!-- Footer elements inside mobile drawer -->
+                <div class="border-t border-slate-900 pt-6 space-y-4">
+                    <a href="#profile" @click="mobileMenuOpen = false" class="flex items-center space-x-3 p-2 rounded-xl hover:bg-slate-900 border border-transparent hover:border-slate-800/60 transition duration-150 group cursor-pointer block">
+                        <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-slate-100 uppercase group-hover:scale-105 transition-transform shrink-0">
+                            {{ slice .User.Username 0 1 }}
+                        </div>
+                        <div class="truncate max-w-[120px]">
+                            <div class="text-xs font-semibold text-slate-300 truncate group-hover:text-white transition-colors">{{ .User.Username }}</div>
+                            <div class="text-[9px] uppercase tracking-wider text-slate-500 font-bold mt-0.5">{{ T .Lang (print "settings.users.role." .User.Role) }}</div>
+                        </div>
+                    </a>
+                    <div class="flex items-center bg-slate-950 border border-slate-900 rounded-xl p-0.5 w-max">
+                        <a href="/lang?lang=tr" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold {{ if eq .Lang "tr" }}bg-blue-600/20 text-blue-400 border border-blue-500/20{{ else }}text-slate-500 hover:text-slate-300{{ end }}">TR</a>
+                        <a href="/lang?lang=en" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold {{ if eq .Lang "en" }}bg-blue-600/20 text-blue-400 border border-blue-500/20{{ else }}text-slate-500 hover:text-slate-300{{ end }}">EN</a>
+                    </div>
+                    <a href="/logout" class="block text-center px-4 py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-850 rounded-xl text-slate-300 hover:text-slate-100 text-sm font-medium transition duration-150">
+                        {{ T .Lang "dashboard.logout" }}
+                    </a>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Sidebar Navigation (Desktop Mode) -->
+        <aside class="hidden md:flex flex-col w-64 bg-[#07080D]/85 border-r border-slate-900/60 backdrop-blur-xl fixed h-full z-30 p-6 justify-between">
+            <div class="space-y-8">
+                <!-- Branding -->
+                <div class="flex items-center space-x-2 px-2">
+                    <span class="text-2xl font-bold tracking-tight bg-gradient-to-r from-blue-400 via-indigo-400 to-indigo-500 bg-clip-text text-transparent">UptimeGo</span>
+                </div>
+
+                <!-- Nav Links -->
+                <nav class="space-y-1.5">
+                    <a href="/" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent hover:border-slate-800/30 transition text-sm font-medium">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"/></svg>
+                        <span>{{ T .Lang "dashboard.title" }}</span>
+                    </a>
+
+                    <div class="pt-4 pb-1 px-3">
+                        <span class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">{{ T .Lang "settings.title" }}</span>
+                    </div>
+
+                    <a href="#notifications"
+                            :class="activeTab === 'notifications' ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' : 'text-slate-400 hover:text-slate-200 border border-transparent hover:bg-slate-900/40'"
+                            class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 text-left">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                        <span>{{ T .Lang "settings.tab.notifications" }}</span>
+                    </a>
+
+                    <a href="#general"
+                            :class="activeTab === 'general' ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' : 'text-slate-400 hover:text-slate-200 border border-transparent hover:bg-slate-900/40'"
+                            class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 text-left">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        <span>{{ T .Lang "settings.tab.general" }}</span>
+                    </a>
+
+                    <a href="#api"
+                            :class="activeTab === 'api' ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' : 'text-slate-400 hover:text-slate-200 border border-transparent hover:bg-slate-900/40'"
+                            class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 text-left">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 7a2 2 0 012 2m-2 4a2 2 0 012-2m-2 4a2 2 0 012 2m-2-4h.01M19 3h-1a1 1 0 00-1 1v1a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 00-1-1H4a2 2 0 00-2 2v14a2 2 0 002 2h16a2 2 0 002-2V5a2 2 0 00-2-2z"/></svg>
+                        <span>{{ T .Lang "settings.tab.api" }}</span>
+                    </a>
+
+                    <div class="pt-4 pb-1 px-3">
+                        <span class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">{{ T .Lang "dashboard.public_page" }}</span>
+                    </div>
+
+                    <a href="/status" target="_blank" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent hover:border-slate-800/30 transition text-sm font-medium">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>{{ T .Lang "dashboard.public_page" }}</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Clickable Profile Widget (Bottom) -->
+            <div class="border-t border-slate-900 pt-6 space-y-4">
+                <a href="#general" class="flex items-center space-x-3 p-2 rounded-xl hover:bg-slate-900 border border-transparent hover:border-slate-850/60 transition duration-150 group cursor-pointer block">
+                    <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-slate-100 uppercase group-hover:scale-105 transition-transform shrink-0">
+                        {{ slice .User.Username 0 1 }}
+                    </div>
+                    <div class="truncate max-w-[120px]">
+                        <div class="text-xs font-semibold text-slate-300 truncate group-hover:text-white transition-colors">{{ .User.Username }}</div>
+                        <div class="text-[9px] uppercase tracking-wider text-slate-500 font-bold mt-0.5">{{ T .Lang (print "settings.users.role." .User.Role) }}</div>
+                    </div>
+                </a>
+
+                <!-- Lang & Logout -->
+                <div class="flex items-center justify-between pt-2">
+                    <div class="flex items-center bg-slate-950 border border-slate-900 rounded-xl p-0.5">
+                        <a href="/lang?lang=tr" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold {{ if eq .Lang "tr" }}bg-blue-600/20 text-blue-400 border border-blue-500/20{{ else }}text-slate-500 hover:text-slate-300{{ end }}">TR</a>
+                        <a href="/lang?lang=en" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold {{ if eq .Lang "en" }}bg-blue-600/20 text-blue-400 border border-blue-500/20{{ else }}text-slate-500 hover:text-slate-300{{ end }}">EN</a>
+                    </div>
+                    <a href="/logout" class="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-950/20 border border-transparent rounded-xl hover:border-rose-900/30 transition duration-150">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-grow w-full md:pl-64 px-4 sm:px-6 md:px-8 py-6 md:py-8">
+            <h1 class="text-2xl font-bold mb-8 text-slate-200 px-1">{{ T .Lang "settings.title" }}</h1>
+
+            <div class="max-w-4xl mx-auto">
+                <!-- Tab Content Panel -->
+                <div class="w-full">
+                    <div x-show="saveSuccess" style="display: none;" class="mb-6 p-4 bg-emerald-950/40 border border-emerald-500/20 text-emerald-300 text-sm rounded-xl custom-transition">
+                        {{ T .Lang "settings.saved_success" }}
+                    </div>
+                    <div x-show="saveError" style="display: none;" class="mb-6 p-4 bg-rose-950/40 border border-rose-500/20 text-rose-300 text-sm rounded-xl custom-transition" x-text="saveError"></div>
+
+                    <!-- 1. NOTIFICATIONS TAB -->
+                    <div x-show="activeTab === 'notifications'" 
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0 translate-y-2 scale-98"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         class="space-y-6">
+                        <form @submit.prevent="saveSettings">
+                            <!-- SMTP -->
+                            <div class="double-bezel-outer shadow-lg mb-6">
+                                <div class="double-bezel-inner p-6">
+                                    <div class="flex justify-between items-center mb-6">
+                                        <h3 class="text-base font-bold text-slate-200">{{ T .Lang "settings.smtp.title" }}</h3>
+                                        <input type="checkbox" x-model="config.smtp_enabled" id="smtp_enabled" @change="saveSettings" class="h-4 w-4 bg-slate-950 border-slate-900 text-blue-600 rounded focus:ring-blue-500">
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" x-show="config.smtp_enabled" x-data="{ showSmtpPass: false }">
+                                        <div class="md:col-span-3 border-b border-slate-900/60 pb-4 mb-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                            <label class="flex items-center space-x-3 cursor-pointer">
+                                                <input type="checkbox" x-model="config.smtp_alert_on_down" @change="saveSettings" class="h-4 w-4 bg-slate-950 border-slate-900 text-blue-600 rounded focus:ring-blue-500">
+                                                <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">{{ T .Lang "settings.alert.on_down" }}</span>
+                                            </label>
+                                            <label class="flex items-center space-x-3 cursor-pointer">
+                                                <input type="checkbox" x-model="config.smtp_alert_on_up" @change="saveSettings" class="h-4 w-4 bg-slate-950 border-slate-900 text-blue-600 rounded focus:ring-blue-500">
+                                                <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">{{ T .Lang "settings.alert.on_up" }}</span>
+                                            </label>
+                                            <label class="flex items-center space-x-3 cursor-pointer">
+                                                <input type="checkbox" x-model="config.smtp_alert_repeat" @change="saveSettings" class="h-4 w-4 bg-slate-950 border-slate-900 text-blue-600 rounded focus:ring-blue-500">
+                                                <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">{{ T .Lang "settings.alert.repeat" }}</span>
+                                            </label>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.smtp.host" }}</label>
+                                            <div class="input-bezel">
+                                                <input type="text" x-model="config.smtp_host" @input.debounce.800ms="saveSettings" class="w-full bg-[#07080D] rounded-[11px] px-4 py-2.5 text-sm text-slate-200 focus:outline-none">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.smtp.port" }}</label>
+                                            <div class="input-bezel">
+                                                <input type="number" x-model.number="config.smtp_port" @input.debounce.800ms="saveSettings" class="w-full bg-[#07080D] rounded-[11px] px-4 py-2.5 text-sm text-slate-200 focus:outline-none">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.smtp.user" }}</label>
+                                            <div class="input-bezel">
+                                                <input type="text" x-model="config.smtp_user" @input.debounce.800ms="saveSettings" class="w-full bg-[#07080D] rounded-[11px] px-4 py-2.5 text-sm text-slate-200 focus:outline-none">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.smtp.pass" }}</label>
+                                            <div class="input-bezel relative">
+                                                <input :type="showSmtpPass ? 'text' : 'password'" x-model="config.smtp_pass" @input.debounce.800ms="saveSettings" placeholder="••••••••" class="w-full bg-[#07080D] rounded-[11px] pl-4 pr-12 py-2.5 text-sm text-slate-200 focus:outline-none">
+                                                <button type="button" @click="showSmtpPass = !showSmtpPass" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300">
+                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!showSmtpPass">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                    </svg>
+                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="showSmtpPass" style="display: none;">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.smtp.from" }}</label>
+                                            <div class="input-bezel">
+                                                <input type="email" x-model="config.smtp_from" @input.debounce.800ms="saveSettings" class="w-full bg-[#07080D] rounded-[11px] px-4 py-2.5 text-sm text-slate-200 focus:outline-none">
+                                            </div>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.smtp.to" }}</label>
+                                            <div class="input-bezel">
+                                                <input type="email" x-model="config.smtp_to" @input.debounce.800ms="saveSettings" class="w-full bg-[#07080D] rounded-[11px] px-4 py-2.5 text-sm text-slate-200 focus:outline-none">
+                                            </div>
+                                        </div>
+                                        <div class="flex items-end justify-end pt-3">
+                                            <button type="button" @click="testChannel('smtp')" :disabled="testing.smtp"
+                                                    class="relative px-5 py-2.5 bg-slate-900 border border-slate-800 text-slate-300 hover:text-slate-100 rounded-xl transition duration-150 text-xs font-bold uppercase tracking-wider flex items-center justify-center space-x-2">
+                                                <span x-show="!testing.smtp">{{ T .Lang "settings.alert.test" }}</span>
+                                                <span x-show="testing.smtp" class="flex items-center space-x-1">
+                                                    <svg class="animate-spin h-3.5 w-3.5 text-slate-300" fill="none" viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    <span>{{ T .Lang "settings.alert.testing" }}</span>
+                                                </span>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Test Results -->
+                                        <div class="md:col-span-3 mt-2" x-show="testResult.smtp.success || testResult.smtp.error">
+                                            <div x-show="testResult.smtp.success" class="p-3 bg-emerald-950/30 border border-emerald-500/20 text-emerald-300 text-xs rounded-lg">
+                                                {{ T .Lang "settings.alert.test_success" }}
+                                            </div>
+                                            <div x-show="testResult.smtp.error" class="p-3 bg-rose-950/30 border border-rose-500/20 text-rose-300 text-xs rounded-lg" x-text="testResult.smtp.error"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Discord -->
+                            <div class="double-bezel-outer shadow-lg mb-6">
+                                <div class="double-bezel-inner p-6">
+                                    <div class="flex justify-between items-center mb-6">
+                                        <h3 class="text-base font-bold text-slate-200">{{ T .Lang "settings.discord.title" }}</h3>
+                                        <input type="checkbox" x-model="config.discord_enabled" id="discord_enabled" @change="saveSettings" class="h-4 w-4 bg-slate-950 border-slate-900 text-blue-600 rounded focus:ring-blue-500">
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" x-show="config.discord_enabled">
+                                        <div class="md:col-span-3 border-b border-slate-900/60 pb-4 mb-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                            <label class="flex items-center space-x-3 cursor-pointer">
+                                                <input type="checkbox" x-model="config.discord_alert_on_down" @change="saveSettings" class="h-4 w-4 bg-slate-950 border-slate-900 text-blue-600 rounded focus:ring-blue-500">
+                                                <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">{{ T .Lang "settings.alert.on_down" }}</span>
+                                            </label>
+                                            <label class="flex items-center space-x-3 cursor-pointer">
+                                                <input type="checkbox" x-model="config.discord_alert_on_up" @change="saveSettings" class="h-4 w-4 bg-slate-950 border-slate-900 text-blue-600 rounded focus:ring-blue-500">
+                                                <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">{{ T .Lang "settings.alert.on_up" }}</span>
+                                            </label>
+                                            <label class="flex items-center space-x-3 cursor-pointer">
+                                                <input type="checkbox" x-model="config.discord_alert_repeat" @change="saveSettings" class="h-4 w-4 bg-slate-950 border-slate-900 text-blue-600 rounded focus:ring-blue-500">
+                                                <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">{{ T .Lang "settings.alert.repeat" }}</span>
+                                            </label>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.discord.url" }}</label>
+                                            <div class="input-bezel">
+                                                <input type="url" x-model="config.discord_webhook" @input.debounce.800ms="saveSettings" class="w-full bg-[#07080D] rounded-[11px] px-4 py-2.5 text-sm text-slate-200 focus:outline-none">
+                                            </div>
+                                        </div>
+                                        <div class="flex items-end justify-end pt-3">
+                                            <button type="button" @click="testChannel('discord')" :disabled="testing.discord"
+                                                    class="relative px-5 py-2.5 bg-slate-900 border border-slate-800 text-slate-300 hover:text-slate-100 rounded-xl transition duration-150 text-xs font-bold uppercase tracking-wider flex items-center justify-center space-x-2">
+                                                <span x-show="!testing.discord">{{ T .Lang "settings.alert.test" }}</span>
+                                                <span x-show="testing.discord" class="flex items-center space-x-1">
+                                                    <svg class="animate-spin h-3.5 w-3.5 text-slate-300" fill="none" viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    <span>{{ T .Lang "settings.alert.testing" }}</span>
+                                                </span>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Test Results -->
+                                        <div class="md:col-span-3 mt-2" x-show="testResult.discord.success || testResult.discord.error">
+                                            <div x-show="testResult.discord.success" class="p-3 bg-emerald-950/30 border border-emerald-500/20 text-emerald-300 text-xs rounded-lg">
+                                                {{ T .Lang "settings.alert.test_success" }}
+                                            </div>
+                                            <div x-show="testResult.discord.error" class="p-3 bg-rose-950/30 border border-rose-500/20 text-rose-300 text-xs rounded-lg" x-text="testResult.discord.error"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Telegram -->
+                            <div class="double-bezel-outer shadow-lg mb-6">
+                                <div class="double-bezel-inner p-6">
+                                    <div class="flex justify-between items-center mb-6">
+                                        <h3 class="text-base font-bold text-slate-200">{{ T .Lang "settings.telegram.title" }}</h3>
+                                        <input type="checkbox" x-model="config.telegram_enabled" id="telegram_enabled" @change="saveSettings" class="h-4 w-4 bg-slate-950 border-slate-900 text-blue-600 rounded focus:ring-blue-500">
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" x-show="config.telegram_enabled">
+                                        <div class="md:col-span-3 border-b border-slate-900/60 pb-4 mb-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                            <label class="flex items-center space-x-3 cursor-pointer">
+                                                <input type="checkbox" x-model="config.telegram_alert_on_down" @change="saveSettings" class="h-4 w-4 bg-slate-950 border-slate-900 text-blue-600 rounded focus:ring-blue-500">
+                                                <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">{{ T .Lang "settings.alert.on_down" }}</span>
+                                            </label>
+                                            <label class="flex items-center space-x-3 cursor-pointer">
+                                                <input type="checkbox" x-model="config.telegram_alert_on_up" @change="saveSettings" class="h-4 w-4 bg-slate-950 border-slate-900 text-blue-600 rounded focus:ring-blue-500">
+                                                <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">{{ T .Lang "settings.alert.on_up" }}</span>
+                                            </label>
+                                            <label class="flex items-center space-x-3 cursor-pointer">
+                                                <input type="checkbox" x-model="config.telegram_alert_repeat" @change="saveSettings" class="h-4 w-4 bg-slate-950 border-slate-900 text-blue-600 rounded focus:ring-blue-500">
+                                                <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">{{ T .Lang "settings.alert.repeat" }}</span>
+                                            </label>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.telegram.token" }}</label>
+                                            <div class="input-bezel">
+                                                <input type="text" x-model="config.telegram_token" @input.debounce.800ms="saveSettings" class="w-full bg-[#07080D] rounded-[11px] px-4 py-2.5 text-sm text-slate-200 focus:outline-none">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.telegram.chat_id" }}</label>
+                                            <div class="input-bezel">
+                                                <input type="text" x-model="config.telegram_chat_id" @input.debounce.800ms="saveSettings" class="w-full bg-[#07080D] rounded-[11px] px-4 py-2.5 text-sm text-slate-200 focus:outline-none">
+                                            </div>
+                                        </div>
+                                        <div class="flex items-end justify-end pt-3">
+                                            <button type="button" @click="testChannel('telegram')" :disabled="testing.telegram"
+                                                    class="relative px-5 py-2.5 bg-slate-900 border border-slate-800 text-slate-300 hover:text-slate-100 rounded-xl transition duration-150 text-xs font-bold uppercase tracking-wider flex items-center justify-center space-x-2">
+                                                <span x-show="!testing.telegram">{{ T .Lang "settings.alert.test" }}</span>
+                                                <span x-show="testing.telegram" class="flex items-center space-x-1">
+                                                    <svg class="animate-spin h-3.5 w-3.5 text-slate-300" fill="none" viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    <span>{{ T .Lang "settings.alert.testing" }}</span>
+                                                </span>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Test Results -->
+                                        <div class="md:col-span-3 mt-2" x-show="testResult.telegram.success || testResult.telegram.error">
+                                            <div x-show="testResult.telegram.success" class="p-3 bg-emerald-950/30 border border-emerald-500/20 text-emerald-300 text-xs rounded-lg">
+                                                {{ T .Lang "settings.alert.test_success" }}
+                                            </div>
+                                            <div x-show="testResult.telegram.error" class="p-3 bg-rose-950/30 border border-rose-500/20 text-rose-300 text-xs rounded-lg" x-text="testResult.telegram.error"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Alert Templates -->
+                            <div class="double-bezel-outer shadow-lg mb-6">
+                                <div class="double-bezel-inner p-6">
+                                    <h3 class="text-base font-bold text-slate-200 mb-6">{{ T .Lang "settings.alert.title" }}</h3>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <!-- Down Alert templates -->
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.alert.subject_down" }}</label>
+                                                <div class="input-bezel">
+                                                    <input type="text" x-model="config.alert_subject_down" @input.debounce.800ms="saveSettings" class="w-full bg-[#07080D] rounded-[11px] px-4 py-2.5 text-sm text-slate-200 focus:outline-none">
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.alert.body_down" }}</label>
+                                                <div class="input-bezel">
+                                                    <textarea x-model="config.alert_body_down" @input.debounce.800ms="saveSettings" rows="4" class="w-full bg-[#07080D] rounded-[11px] px-4 py-2.5 text-sm text-slate-200 focus:outline-none"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Up Alert templates -->
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.alert.subject_up" }}</label>
+                                                <div class="input-bezel">
+                                                    <input type="text" x-model="config.alert_subject_up" @input.debounce.800ms="saveSettings" class="w-full bg-[#07080D] rounded-[11px] px-4 py-2.5 text-sm text-slate-200 focus:outline-none">
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.alert.body_up" }}</label>
+                                                <div class="input-bezel">
+                                                    <textarea x-model="config.alert_body_up" @input.debounce.800ms="saveSettings" rows="4" class="w-full bg-[#07080D] rounded-[11px] px-4 py-2.5 text-sm text-slate-200 focus:outline-none"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="md:col-span-2">
+                                            <p class="text-[10px] text-slate-500 leading-relaxed font-semibold">{{ T .Lang "settings.alert.placeholders_desc" }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- 2. GENERAL TAB -->
+                    <div x-show="activeTab === 'general'" 
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0 translate-y-2 scale-98"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         class="space-y-6" style="display: none;">
+                        <form @submit.prevent="saveSettings">
+                            <div class="double-bezel-outer shadow-lg mb-6">
+                                <div class="double-bezel-inner p-6">
+                                    <h3 class="text-base font-bold text-slate-200 mb-6">{{ T .Lang "settings.general.branding" }}</h3>
+                                    
+                                    <div class="grid grid-cols-1 gap-6">
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.general.title" }}</label>
+                                            <div class="input-bezel">
+                                                <input type="text" x-model="config.public_title" @input.debounce.800ms="saveSettings" class="w-full bg-[#07080D] rounded-[11px] px-4 py-2.5 text-sm text-slate-200 focus:outline-none">
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.general.logo" }}</label>
+                                            <div class="input-bezel">
+                                                <input type="url" x-model="config.public_logo" @input.debounce.800ms="saveSettings" placeholder="https://example.com/logo.png" class="w-full bg-[#07080D] rounded-[11px] px-4 py-2.5 text-sm text-slate-200 focus:outline-none">
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.general.announcement" }}</label>
+                                            <div class="input-bezel">
+                                                <textarea x-model="config.public_announcement" @input.debounce.800ms="saveSettings" rows="4" placeholder="{{ T .Lang "settings.placeholder.notice" }}"
+                                                          class="w-full bg-[#07080D] rounded-[11px] px-4 py-2.5 text-sm text-slate-200 focus:outline-none"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                        <!-- Profil Bilgileri (Birleştirilmiş) -->
+                        <div class="mt-10 animate-fade-in" x-data="profileState()">
+                            <div class="double-bezel-outer shadow-lg">
+                                <div class="double-bezel-inner p-6">
+                                    <h3 class="text-base font-bold text-slate-200 mb-6">{{ T .Lang "settings.profile.title" }}</h3>
+                                    
+                                    <div x-show="profileSuccess" style="display: none;" class="mb-4 p-4 bg-emerald-950/40 border border-emerald-500/20 text-emerald-300 text-sm rounded-xl">
+                                        {{ T .Lang "settings.profile.success" }}
+                                    </div>
+                                    <div x-show="profileError" style="display: none;" class="mb-4 p-4 bg-rose-950/40 border border-rose-500/20 text-rose-300 text-sm rounded-xl" x-text="profileError"></div>
+
+                                    <form @submit.prevent="updateProfile">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.profile.username" }}</label>
+                                                <div class="input-bezel">
+                                                    <input type="text" x-model="profileForm.username" required class="w-full bg-[#07080D] rounded-[11px] px-4 py-2.5 text-sm text-slate-200 focus:outline-none">
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.profile.password" }}</label>
+                                                <div class="input-bezel relative">
+                                                    <input :type="showProfilePass ? 'text' : 'password'" x-model="profileForm.password" placeholder="••••••••" class="w-full bg-[#07080D] rounded-[11px] pl-4 pr-12 py-2.5 text-sm text-slate-200 focus:outline-none">
+                                                    <button type="button" @click="showProfilePass = !showProfilePass" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300">
+                                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!showProfilePass">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                        </svg>
+                                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="showProfilePass" style="display: none;">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg hover:shadow-blue-600/20 active:scale-[0.98] custom-transition text-xs uppercase tracking-wider">
+                                            {{ T .Lang "settings.profile.save" }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kullanıcı Yönetimi (Birleştirilmiş) -->
+                        {{ if eq .User.Role "super_admin" }}
+                        <div class="mt-10 space-y-6">
+                            <div class="double-bezel-outer shadow-lg">
+                                <div class="double-bezel-inner p-6">
+                                    <h3 class="text-base font-bold text-slate-200 mb-6">{{ T .Lang "settings.users.add" }}</h3>
+                                    <form @submit.prevent="addUser">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "setup.username" }}</label>
+                                                <div class="input-bezel">
+                                                    <input type="text" x-model="userForm.username" required class="w-full bg-[#07080D] rounded-[11px] px-4 py-2.5 text-sm text-slate-200 focus:outline-none">
+                                                </div>
+                                            </div>
+                                            <div x-data="{ showAddUserPass: false }">
+                                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "setup.password" }}</label>
+                                                <div class="input-bezel relative">
+                                                    <input :type="showAddUserPass ? 'text' : 'password'" x-model="userForm.password" required minlength="6" class="w-full bg-[#07080D] rounded-[11px] pl-4 pr-12 py-2.5 text-sm text-slate-200 focus:outline-none">
+                                                    <button type="button" @click="showAddUserPass = !showAddUserPass" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300">
+                                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!showAddUserPass">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                        </svg>
+                                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="showAddUserPass" style="display: none;">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ T .Lang "settings.users.role" }}</label>
+                                                <div class="input-bezel">
+                                                    <select x-model="userForm.role" class="w-full bg-[#07080D] rounded-[11px] px-4 py-2.5 text-sm text-slate-200 focus:outline-none">
+                                                        <option value="admin">{{ T .Lang "settings.users.role.admin" }}</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg hover:shadow-blue-600/20 active:scale-[0.98] custom-transition text-xs uppercase tracking-wider">
+                                            {{ T .Lang "settings.users.add" }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="double-bezel-outer shadow-2xl">
+                                <div class="double-bezel-inner overflow-hidden">
+                                    <table class="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr class="border-b border-slate-900 bg-slate-950/40 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                                <th class="py-4 px-6">{{ T .Lang "setup.username" }}</th>
+                                                <th class="py-4 px-6">{{ T .Lang "settings.users.role" }}</th>
+                                                <th class="py-4 px-6 text-right">{{ T .Lang "common.actions" }}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-900/60">
+                                            {{ range .Data.Users }}
+                                            <tr class="hover:bg-slate-900/10 transition-colors">
+                                                <td class="py-4 px-6 font-bold text-slate-200">{{ .Username }}</td>
+                                                <td class="py-4 px-6">
+                                                    <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded border {{ if eq .Role "admin" }}bg-indigo-950/30 text-indigo-400 border-indigo-500/10{{ else }}bg-slate-950/80 text-slate-400 border-slate-900{{ end }}">
+                                                        {{ T $.Lang (print "settings.users.role." .Role) }}
+                                                    </span>
+                                                </td>
+                                                <td class="py-4 px-6 text-right">
+                                                    <button @click="deleteUser({{ .ID }})" class="p-2 text-slate-400 hover:text-red-400 bg-slate-950 border border-slate-900 rounded-xl hover:bg-slate-900 transition-colors">
+                                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {{ else }}
+                                            <tr>
+                                                <td colspan="3" class="py-8 text-center text-slate-500 font-semibold text-sm leading-relaxed">
+                                                    {{ T .Lang "settings.users.no_users" }}
+                                                </td>
+                                            </tr>
+                                            {{ end }}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        {{ end }}
+                    </div>
+
+                    <!-- 3. API TAB -->
+                    <div x-show="activeTab === 'api'" 
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0 translate-y-2 scale-98"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         class="space-y-6" style="display: none;">
+                        <div class="double-bezel-outer shadow-lg mb-6">
+                            <div class="double-bezel-inner p-6">
+                                <h3 class="text-base font-bold text-slate-200 mb-2">{{ T .Lang "settings.api.title" }}</h3>
+                                <p class="text-xs text-slate-400 mb-6 leading-relaxed">{{ T .Lang "settings.api.desc" }}</p>
+                                
+                                <div class="flex items-center space-x-3 mb-4">
+                                    <div class="relative flex-grow">
+                                        <div class="input-bezel">
+                                            <input :type="apiKeyVisible ? 'text' : 'password'" x-model="apiKey" readonly
+                                                   class="w-full bg-[#07080D] rounded-[11px] pl-4 pr-12 py-2.5 text-sm text-slate-200 font-mono focus:outline-none">
+                                        </div>
+                                        <button @click="apiKeyVisible = !apiKeyVisible" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300">
+                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!apiKeyVisible">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                            </svg>
+                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="apiKeyVisible" style="display: none;">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <button @click="copyApiKey()" 
+                                            class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-slate-100 font-semibold rounded-xl border border-slate-800 hover:border-slate-700 transition duration-150 flex items-center space-x-2 text-xs uppercase tracking-wider">
+                                        <span x-text="copied ? '{{ T .Lang "settings.api.copied" }}' : '{{ T .Lang "settings.api.copy" }}'"></span>
+                                    </button>
+                                    <button @click="resetApiKey()" :disabled="resettingKey"
+                                            class="px-4 py-2.5 bg-rose-955/20 hover:bg-rose-950/30 text-rose-400 border border-rose-500/10 hover:border-rose-500/20 font-semibold rounded-xl transition duration-150 text-xs uppercase tracking-wider">
+                                        {{ T .Lang "settings.api.reset" }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- API Help / Docs -->
+                        <div class="double-bezel-outer shadow-lg">
+                            <div class="double-bezel-inner p-6">
+                                <h3 class="text-base font-bold text-slate-200 mb-6">{{ T .Lang "settings.api.docs.title" }}</h3>
+                                <div class="space-y-6 text-sm text-slate-300">
+                                    <div>
+                                        <h4 class="font-bold text-blue-400 mb-2">{{ T .Lang "settings.api.docs.list" }}</h4>
+                                        <code class="block bg-slate-950 border border-slate-900 rounded-xl p-4 font-mono text-xs overflow-x-auto">
+                                            curl -H "X-API-Key: <span x-text="apiKey"></span>" http://localhost:8080/api/v1/monitors
+                                        </code>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-blue-400 mb-2">{{ T .Lang "settings.api.docs.create" }}</h4>
+                                        <code class="block bg-slate-950 border border-slate-900 rounded-xl p-4 font-mono text-xs overflow-x-auto leading-relaxed">
+                                            curl -X POST \<br>
+                                            &nbsp;&nbsp;-H "Content-Type: application/json" \<br>
+                                            &nbsp;&nbsp;-H "X-API-Key: <span x-text="apiKey"></span>" \<br>
+                                            &nbsp;&nbsp;-d '{<br>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;"name": "My API Monitor",<br>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;"type": "http",<br>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;"target": "https://google.com",<br>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;"interval": 60,<br>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;"timeout": 2000,<br>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;"retries": 3,<br>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;"alert_interval": 0,<br>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;"active": true,<br>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;"public": true<br>
+                                            &nbsp;&nbsp;}' \<br>
+                                            &nbsp;&nbsp;http://localhost:8080/api/v1/monitors
+                                        </code>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-blue-400 mb-2">{{ T .Lang "settings.api.docs.delete" }}</h4>
+                                        <code class="block bg-slate-950 border border-slate-900 rounded-xl p-4 font-mono text-xs overflow-x-auto">
+                                            curl -X DELETE -H "X-API-Key: <span x-text="apiKey"></span>" "http://localhost:8080/api/v1/monitors?id={monitor_id}"
+                                        </code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="w-full text-center py-8 text-[11px] text-slate-600 border-t border-slate-950 bg-slate-950/20 mt-12">
+        Powered by <a href="https://github.com/benyigiteren/uptimego" target="_blank" class="hover:text-slate-400 font-semibold text-slate-500 border-b border-dashed border-slate-700 hover:border-slate-400 transition-colors">UptimeGO</a>
+    </footer>
+
+    <script>
+        function settingsState() {
+            // Determine initial tab from URL hash (e.g. /settings#profile)
+            const hash = window.location.hash.replace('#', '');
+            const validTabs = ['notifications', 'general', 'api'];
+            const initialTab = validTabs.includes(hash) ? hash : 'notifications';
+
+            return {
+                init() {
+                    window.addEventListener('hashchange', () => {
+                        const newHash = window.location.hash.replace('#', '');
+                        if (validTabs.includes(newHash)) {
+                            this.activeTab = newHash;
+                        }
+                    });
+                },
+                mobileMenuOpen: false,
+                activeTab: initialTab,
+                saveSuccess: false,
+                saveError: '',
+                apiKeyVisible: false,
+                copied: false,
+                resettingKey: false,
+                apiKey: {{ .User.APIKey }},
+                config: {
+                    public_title: {{ .Settings.PublicTitle }},
+                    public_announcement: {{ .Settings.PublicAnnouncement }},
+                    public_logo: {{ .Settings.PublicLogo }},
+                    smtp_enabled: {{ .Settings.SMTPEnabled }},
+                    smtp_host: {{ .Settings.SMTPHost }},
+                    smtp_port: {{ .Settings.SMTPPort }},
+                    smtp_user: {{ .Settings.SMTPUser }},
+                    smtp_pass: '', // keep empty to prevent exposing
+                    smtp_from: {{ .Settings.SMTPFrom }},
+                    smtp_to: {{ .Settings.SMTPTo }},
+                    discord_enabled: {{ .Settings.DiscordEnabled }},
+                    discord_webhook: {{ .Settings.DiscordWebhook }},
+                    telegram_enabled: {{ .Settings.TelegramEnabled }},
+                    telegram_token: {{ .Settings.TelegramToken }},
+                    telegram_chat_id: {{ .Settings.TelegramChatID }},
+                    alert_subject_down: {{ .Settings.AlertSubjectDown }},
+                    alert_body_down: {{ .Settings.AlertBodyDown }},
+                    alert_subject_up: {{ .Settings.AlertSubjectUp }},
+                    alert_body_up: {{ .Settings.AlertBodyUp }},
+                    smtp_alert_on_down: {{ .Settings.SMTPAlertOnDown }},
+                    smtp_alert_on_up: {{ .Settings.SMTPAlertOnUp }},
+                    smtp_alert_repeat: {{ .Settings.SMTPAlertRepeat }},
+                    discord_alert_on_down: {{ .Settings.DiscordAlertOnDown }},
+                    discord_alert_on_up: {{ .Settings.DiscordAlertOnUp }},
+                    discord_alert_repeat: {{ .Settings.DiscordAlertRepeat }},
+                    telegram_alert_on_down: {{ .Settings.TelegramAlertOnDown }},
+                    telegram_alert_on_up: {{ .Settings.TelegramAlertOnUp }},
+                    telegram_alert_repeat: {{ .Settings.TelegramAlertRepeat }}
+                },
+                testing: {
+                    smtp: false,
+                    telegram: false,
+                    discord: false
+                },
+                testResult: {
+                    smtp: { success: false, error: '' },
+                    telegram: { success: false, error: '' },
+                    discord: { success: false, error: '' }
+                },
+                userForm: {
+                    username: '',
+                    password: '',
+                    role: 'admin'
+                },
+                async saveSettings() {
+                    this.saveSuccess = false;
+                    this.saveError = '';
+
+                    try {
+                        const response = await fetch('/api/settings', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.config)
+                        });
+                        let result = {};
+                        const contentType = response.headers.get("content-type");
+                        if (contentType && contentType.includes("application/json")) {
+                            result = await response.json();
+                        } else {
+                            const text = await response.text();
+                            result = { error: text || 'Failed to save settings' };
+                        }
+                        if (!response.ok) {
+                            throw new Error(result.error || 'Failed to save settings');
+                        }
+                        this.saveSuccess = true;
+                        setTimeout(() => this.saveSuccess = false, 3000);
+                    } catch (error) {
+                        this.saveError = error.message;
+                    }
+                },
+                async testChannel(channel) {
+                    this.testing[channel] = true;
+                    this.testResult[channel].success = false;
+                    this.testResult[channel].error = '';
+
+                    const payload = {
+                        channel: channel,
+                        smtp_host: this.config.smtp_host,
+                        smtp_port: parseInt(this.config.smtp_port, 10) || 0,
+                        smtp_user: this.config.smtp_user,
+                        smtp_pass: this.config.smtp_pass,
+                        smtp_from: this.config.smtp_from,
+                        smtp_to: this.config.smtp_to,
+                        telegram_token: this.config.telegram_token,
+                        telegram_chat_id: this.config.telegram_chat_id,
+                        discord_webhook: this.config.discord_webhook
+                    };
+
+                    try {
+                        const response = await fetch('/api/settings/test', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        let result = {};
+                        const contentType = response.headers.get("content-type");
+                        if (contentType && contentType.includes("application/json")) {
+                            result = await response.json();
+                        } else {
+                            const text = await response.text();
+                            result = { error: text || 'Test connection failed' };
+                        }
+                        if (!response.ok) {
+                            throw new Error(result.error || 'Test connection failed');
+                        }
+                        this.testResult[channel].success = true;
+                        setTimeout(() => this.testResult[channel].success = false, 5000);
+                    } catch (error) {
+                        this.testResult[channel].error = error.message;
+                    } finally {
+                        this.testing[channel] = false;
+                    }
+                },
+                async copyApiKey() {
+                    try {
+                        await navigator.clipboard.writeText(this.apiKey);
+                        this.copied = true;
+                        setTimeout(() => this.copied = false, 2000);
+                    } catch (err) {
+                        alert('Failed to copy text: ' + err);
+                    }
+                },
+                async resetApiKey() {
+                    if (!confirm({{ T .Lang "settings.api.reset_confirm" }})) return;
+                    this.resettingKey = true;
+                    try {
+                        const response = await fetch('/api/users/apikey/reset', { method: 'POST' });
+                        let result = {};
+                        const contentType = response.headers.get("content-type");
+                        if (contentType && contentType.includes("application/json")) {
+                            result = await response.json();
+                        } else {
+                            const text = await response.text();
+                            result = { error: text || 'Reset failed' };
+                        }
+                        if (!response.ok) throw new Error(result.error || 'Reset failed');
+                        this.apiKey = result.api_key;
+                    } catch (error) {
+                        alert(error.message);
+                    } finally {
+                        this.resettingKey = false;
+                    }
+                },
+                async addUser() {
+                    this.saveSuccess = false;
+                    this.saveError = '';
+
+                    try {
+                        const response = await fetch('/api/users', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.userForm)
+                        });
+                        let result = {};
+                        const contentType = response.headers.get("content-type");
+                        if (contentType && contentType.includes("application/json")) {
+                            result = await response.json();
+                        } else {
+                            const text = await response.text();
+                            result = { error: text || 'Failed to add user' };
+                        }
+                        if (!response.ok) {
+                            throw new Error(result.error || 'Failed to add user');
+                        }
+                        window.location.reload();
+                    } catch (error) {
+                        this.saveError = error.message;
+                    }
+                },
+                async deleteUser(id) {
+                    if (!confirm({{ T .Lang "settings.users.delete_confirm" }})) return;
+                    this.saveSuccess = false;
+                    this.saveError = '';
+
+                    try {
+                        const response = await fetch(`/api/users/delete?id=${id}`, { method: 'DELETE' });
+                        let result = {};
+                        const contentType = response.headers.get("content-type");
+                        if (contentType && contentType.includes("application/json")) {
+                            result = await response.json();
+                        } else {
+                            const text = await response.text();
+                            result = { error: text || 'Failed to delete user' };
+                        }
+                        if (!response.ok) {
+                            throw new Error(result.error || 'Failed to delete user');
+                        }
+                        window.location.reload();
+                    } catch (error) {
+                        this.saveError = error.message;
+                    }
+                }
+            }
+        }
+
+        function profileState() {
+            return {
+                profileForm: { username: {{ .User.Username }}, password: '' },
+                profileSuccess: false,
+                profileError: '',
+                showProfilePass: false,
+                async updateProfile() {
+                    this.profileSuccess = false;
+                    this.profileError = '';
+                    try {
+                        const response = await fetch('/api/users/profile', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.profileForm)
+                        });
+                        let result = {};
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            result = await response.json();
+                        } else {
+                            const text = await response.text();
+                            result = { error: text || 'Update failed' };
+                        }
+                        if (!response.ok) {
+                            throw new Error(result.error || 'Failed to update profile');
+                        }
+                        this.profileSuccess = true;
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } catch (error) {
+                        this.profileError = error.message;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

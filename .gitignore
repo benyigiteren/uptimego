@@ -1,0 +1,18 @@
+# Binaries
+*.exe
+*.exe~
+uptimego
+test
+
+# Databases
+data/
+*.db
+*.db-journal
+*.db-wal
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Agent files
+.agents/

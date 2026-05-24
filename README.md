@@ -39,7 +39,7 @@ En kolay ve hızlı kurulum yöntemi Docker Compose kullanmaktır.
        container_name: uptimego
        restart: always
        ports:
-         - "8080:8080"
+         - "8086:8086"
        volumes:
          - ./data:/app/data
        environment:
@@ -52,7 +52,7 @@ En kolay ve hızlı kurulum yöntemi Docker Compose kullanmaktır.
    ```bash
    docker-compose up -d
    ```
-   Uygulama `http://localhost:8080` adresinde çalışmaya başlayacaktır.
+   Uygulama `http://localhost:8086` adresinde çalışmaya başlayacaktır.
 
 ---
 
@@ -85,7 +85,7 @@ Bilgisayarınızda Go (1.22 veya üzeri) kuruluysa projeyi doğrudan derleyebili
 
 ## 🚀 İlk Kurulum (Setup)
 
-Uygulamayı ilk başlattığınızda tarayıcınızdan `http://localhost:8080` adresine gittiğinizde otomatik olarak kurulum ekranına yönlendirilirsiniz.
+Uygulamayı ilk başlattığınızda tarayıcınızdan `http://localhost:8086` adresine gittiğinizde otomatik olarak kurulum ekranına yönlendirilirsiniz.
 
 1. Super Admin için güvenli bir **kullanıcı adı** ve **şifre** belirleyin.
 2. Kurulumu tamamladıktan sonra giriş yaparak kontrol paneline ulaşabilirsiniz.
@@ -99,7 +99,7 @@ UptimeGo, harici yazılımlarla entegrasyon için basit ve güvenli bir REST API
 
 ### 📋 1. Monitörleri Listeleme
 ```bash
-curl -H "X-API-Key: API_ANAHTARINIZ" http://localhost:8080/api/v1/monitors
+curl -H "X-API-Key: API_ANAHTARINIZ" http://localhost:8086/api/v1/monitors
 ```
 
 ### ➕ 2. Yeni Monitör Ekleme
@@ -118,12 +118,12 @@ curl -X POST \
     "active": true,
     "public": true
   }' \
-  http://localhost:8080/api/v1/monitors
+  http://localhost:8086/api/v1/monitors
 ```
 
 ### ❌ 3. Monitör Silme
 ```bash
-curl -X DELETE -H "X-API-Key: API_ANAHTARINIZ" "http://localhost:8080/api/v1/monitors?id=MONITOR_ID"
+curl -X DELETE -H "X-API-Key: API_ANAHTARINIZ" "http://localhost:8086/api/v1/monitors?id=MONITOR_ID"
 ```
 
 ---

@@ -727,7 +727,7 @@
                                     <div>
                                         <h4 class="font-bold text-blue-400 mb-2">{{ T .Lang "settings.api.docs.list" }}</h4>
                                         <code class="block bg-slate-950 border border-slate-900 rounded-xl p-4 font-mono text-xs overflow-x-auto">
-                                            curl -H "X-API-Key: <span x-text="apiKey"></span>" http://localhost:8080/api/v1/monitors
+                                            curl -H "X-API-Key: <span x-text="apiKey"></span>" http://localhost:8086/api/v1/monitors
                                         </code>
                                     </div>
                                     <div>
@@ -747,13 +747,13 @@
                                             &nbsp;&nbsp;&nbsp;&nbsp;"active": true,<br>
                                             &nbsp;&nbsp;&nbsp;&nbsp;"public": true<br>
                                             &nbsp;&nbsp;}' \<br>
-                                            &nbsp;&nbsp;http://localhost:8080/api/v1/monitors
+                                            &nbsp;&nbsp;http://localhost:8086/api/v1/monitors
                                         </code>
                                     </div>
                                     <div>
                                         <h4 class="font-bold text-blue-400 mb-2">{{ T .Lang "settings.api.docs.delete" }}</h4>
                                         <code class="block bg-slate-950 border border-slate-900 rounded-xl p-4 font-mono text-xs overflow-x-auto">
-                                            curl -X DELETE -H "X-API-Key: <span x-text="apiKey"></span>" "http://localhost:8080/api/v1/monitors?id={monitor_id}"
+                                            curl -X DELETE -H "X-API-Key: <span x-text="apiKey"></span>" "http://localhost:8086/api/v1/monitors?id={monitor_id}"
                                         </code>
                                     </div>
                                 </div>

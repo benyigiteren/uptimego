@@ -28,7 +28,7 @@ WORKDIR /app
 COPY --from=builder /app/uptimego /app/uptimego
 
 # Expose port
-EXPOSE 8080
+EXPOSE 8086
 
 # Run the app
-ENTRYPOINT ["/app/uptimego", "-port", "8080", "-db", "/app/data/uptimego.db"]
+ENTRYPOINT ["/app/uptimego", "-port", "8086", "-db", "/app/data/uptimego.db"]

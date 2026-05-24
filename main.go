@@ -33,7 +33,7 @@ func main() {
 	}()
 
 	// CLI Flags
-	port := flag.String("port", "8080", "Port to run the application on")
+	port := flag.String("port", "8086", "Port to run the application on")
 	dbPath := flag.String("db", "data/uptimego.db", "Path to SQLite database file")
 	flag.Parse();
 

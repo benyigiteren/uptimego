@@ -155,6 +155,9 @@ func main() {
 
 	log.Printf("[System] Web server is listening on port %s", *port)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("[System] Listen and serve failed: %v", err)
+		log.Printf("[Hata] Web sunucusu başlatılamadı: %v", err)
+		log.Printf("[Hata] Port %s başka bir uygulama tarafından kullanılıyor olabilir.", *port)
+		log.Printf("[Hata] Farklı bir port belirtmek için '-port <port_numarası>' parametresini kullanabilirsiniz. (Örn: ./uptimego -port 8085)")
+		os.Exit(1)
 	}
 }

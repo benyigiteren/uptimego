@@ -83,7 +83,7 @@ func GetUserFromSession(r *http.Request) (*models.User, error) {
 	var u models.User
 	var expiresAtStr string
 	err = db.DB.QueryRow(`
-		SELECT u.id, u.username, u.role, u.api_key, s.expires_at 
+		SELECT u.id, u.username, u.role, COALESCE(u.api_key, ''), s.expires_at 
 		FROM sessions s 
 		JOIN users u ON s.user_id = u.id 
 		WHERE s.token = ?`, cookie.Value).Scan(&u.ID, &u.Username, &u.Role, &u.APIKey, &expiresAtStr)
@@ -227,9 +227,14 @@ func HandleSetupSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Generate API key for the new super admin
+	apiKeyBytes := make([]byte, 16)
+	_, _ = rand.Read(apiKeyBytes)
+	apiKey := hex.EncodeToString(apiKeyBytes)
+
 	_, err = db.DB.Exec(`
-		INSERT INTO users (username, password_hash, role) 
-		VALUES (?, ?, ?)`, username, string(hash), string(models.RoleSuperAdmin))
+		INSERT INTO users (username, password_hash, role, api_key) 
+		VALUES (?, ?, ?, ?)`, username, string(hash), string(models.RoleSuperAdmin), apiKey)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte(`{"error": "Database write error"}`))

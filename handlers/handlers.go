@@ -292,7 +292,7 @@ func HandleLoginSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expiresAt := time.Now().Add(24 * time.Hour)
+	expiresAt := time.Now().Add(24 * time.Hour).UTC()
 	_, err = db.DB.Exec("INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)", token, id, expiresAt)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -300,13 +300,13 @@ func HandleLoginSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set HttpOnly secure cookie dynamically based on TLS or proxy headers (avoid secure cookie for IP addresses to support HTTP tests)
+	// Set HttpOnly secure cookie dynamically based on host type (avoid secure cookie for IP addresses to support HTTP tests)
 	host := r.Host
 	if shost, _, err := net.SplitHostPort(r.Host); err == nil {
 		host = shost
 	}
 	isIP := net.ParseIP(host) != nil
-	secure := (r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https") && !isIP
+	secure := !isIP // In Dokploy, domains always enforce HTTPS (SSL), while direct IP access uses HTTP.
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",

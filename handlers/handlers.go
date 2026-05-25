@@ -279,13 +279,14 @@ func HandleLoginSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set HttpOnly secure cookie
+	// Set HttpOnly secure cookie dynamically based on TLS or proxy headers
+	secure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
 		Value:    token,
 		Expires:  expiresAt,
 		HttpOnly: true,
-		Secure:   false, // Set to true if HTTPS is enforced
+		Secure:   secure,
 		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
 	})

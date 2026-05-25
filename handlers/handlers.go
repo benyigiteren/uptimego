@@ -293,7 +293,7 @@ func HandleLoginSubmit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	expiresAt := time.Now().Add(24 * time.Hour).UTC()
-	_, err = db.DB.Exec("INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)", token, id, expiresAt)
+	_, err = db.DB.Exec("INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)", token, id, expiresAt.Format(time.RFC3339))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte(`{"error": "Session save error"}`))

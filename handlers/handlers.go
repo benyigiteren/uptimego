@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -279,8 +280,14 @@ func HandleLoginSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set HttpOnly secure cookie dynamically based on TLS or proxy headers
-	secure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+	// Set HttpOnly secure cookie dynamically based on TLS or proxy headers (avoid secure cookie for IP addresses to support HTTP tests)
+	host := r.Host
+	if shost, _, err := net.SplitHostPort(r.Host); err == nil {
+		host = shost
+	}
+	isIP := net.ParseIP(host) != nil
+	secure := (r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https") && !isIP
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
 		Value:    token,

@@ -72,6 +72,7 @@ func createTables() error {
 			username TEXT NOT NULL UNIQUE,
 			password_hash TEXT NOT NULL,
 			role TEXT NOT NULL CHECK(role IN ('super_admin', 'admin', 'viewer')),
+			api_key TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		);`,
 
@@ -83,6 +84,7 @@ func createTables() error {
 			interval INTEGER NOT NULL,
 			timeout INTEGER NOT NULL,
 			retries INTEGER NOT NULL DEFAULT 3,
+			alert_interval INTEGER DEFAULT 0,
 			active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0, 1)),
 			keyword TEXT,
 			ssl_expiry_warning INTEGER DEFAULT 0 CHECK(ssl_expiry_warning IN (0, 1)),

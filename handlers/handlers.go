@@ -312,6 +312,7 @@ func HandleLoginSubmit(w http.ResponseWriter, r *http.Request) {
 		Name:     "session_token",
 		Value:    token,
 		Expires:  expiresAt,
+		MaxAge:   86400, // 24 hours in seconds (ensures persistence regardless of client-server clock offset)
 		HttpOnly: true,
 		Secure:   secure,
 		SameSite: http.SameSiteLaxMode,

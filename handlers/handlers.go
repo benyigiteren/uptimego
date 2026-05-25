@@ -81,14 +81,33 @@ func GetUserFromSession(r *http.Request) (*models.User, error) {
 	}
 
 	var u models.User
-	var expiresAt time.Time
+	var expiresAtStr string
 	err = db.DB.QueryRow(`
 		SELECT u.id, u.username, u.role, u.api_key, s.expires_at 
 		FROM sessions s 
 		JOIN users u ON s.user_id = u.id 
-		WHERE s.token = ?`, cookie.Value).Scan(&u.ID, &u.Username, &u.Role, &u.APIKey, &expiresAt)
+		WHERE s.token = ?`, cookie.Value).Scan(&u.ID, &u.Username, &u.Role, &u.APIKey, &expiresAtStr)
 	if err != nil {
 		return nil, err
+	}
+
+	// Dynamic parse of SQLite datetime string formats
+	var expiresAt time.Time
+	expiresAt, err = time.Parse(time.RFC3339, expiresAtStr)
+	if err != nil {
+		// Try fallback format without T or timezone offsets (standard SQLite local format)
+		expiresAt, err = time.Parse("2006-01-02 15:04:05", expiresAtStr)
+		if err != nil {
+			// Try fallback format with RFC3339-like timezone format but space instead of T
+			expiresAt, err = time.Parse("2006-01-02 15:04:05-07:00", expiresAtStr)
+			if err != nil {
+				// Final attempt to parse with timezone offset + Z
+				expiresAt, err = time.Parse("2006-01-02 15:04:05 -0700 MST", expiresAtStr)
+				if err != nil {
+					return nil, fmt.Errorf("failed to parse expires_at '%s': %w", expiresAtStr, err)
+				}
+			}
+		}
 	}
 
 	if time.Now().After(expiresAt) {
@@ -106,6 +125,7 @@ func RequireAuth(minRole models.Role) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			user, err := GetUserFromSession(r)
 			if err != nil {
+				log.Printf("[Auth] Auth failed for %s: %v", r.URL.Path, err)
 				if strings.HasPrefix(r.URL.Path, "/api/") {
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusUnauthorized)

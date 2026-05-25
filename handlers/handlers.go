@@ -244,7 +244,40 @@ func HandleSetupSubmit(w http.ResponseWriter, r *http.Request) {
 	// Create default settings row
 	_, _ = db.DB.Exec("INSERT OR IGNORE INTO settings (key, value) VALUES ('public_title', 'UptimeGo Status')")
 
-	_, _ = w.Write([]byte(`{"success": true}`))
+	// Auto-login: get the newly created user's ID and create a session
+	var newUserID int64
+	_ = db.DB.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&newUserID)
+
+	token, err := GenerateRandomToken()
+	if err != nil {
+		// User created but auto-login failed, redirect to login manually
+		_, _ = w.Write([]byte(`{"success": true}`))
+		return
+	}
+
+	expiresAt := time.Now().Add(24 * time.Hour).UTC()
+	_, _ = db.DB.Exec("INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)", token, newUserID, expiresAt.Format(time.RFC3339))
+
+	// Set session cookie
+	host := r.Host
+	if shost, _, splitErr := net.SplitHostPort(r.Host); splitErr == nil {
+		host = shost
+	}
+	isIP := net.ParseIP(host) != nil
+	secure := !isIP
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_token",
+		Value:    token,
+		Expires:  expiresAt,
+		MaxAge:   86400,
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
+		Path:     "/",
+	})
+
+	_, _ = w.Write([]byte(`{"success": true, "redirect": "/"}`))
 }
 
 // Login/Logout Handlers

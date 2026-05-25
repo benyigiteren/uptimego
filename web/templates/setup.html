@@ -178,8 +178,8 @@
 
                         this.successMessage = true;
                         setTimeout(() => {
-                            window.location.href = '/login';
-                        }, 1500);
+                            window.location.href = result.redirect || '/login';
+                        }, 1000);
 
                     } catch (error) {
                         this.errorMessage = error.message;

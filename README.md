@@ -1,3 +1,5 @@
+<img src="uptimegogithub.png" alt="Bingo — Self-hosted uptime monitör" width="100%" />
+
 # 🚀 UptimeGo
 
 UptimeGo, web servislerinizin ve sunucularınızın erişilebilirliğini (HTTP ve Ping tabanlı) anlık olarak takip eden, servis kesintilerinde Telegram, Discord ve E-posta (SMTP) üzerinden akıllı bildirimler gönderen, modern ve son derece hafif (boşta < 15MB RAM tüketen) bir **Uptime & Status** yönetim panelidir.

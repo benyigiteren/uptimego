@@ -1,4 +1,4 @@
-<img src="uptimegogithub.png" alt="Bingo — Self-hosted uptime monitör" width="100%" />
+<img src="uptimegogithub.png" alt="UptimeGo — Self-hosted uptime monitör" width="100%" />
 
 # 🚀 UptimeGo
 
